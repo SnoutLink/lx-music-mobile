@@ -10,7 +10,7 @@ Change log format is based on [Keep a Changelog](http://keepachangelog.com/).
 
 ### 新增
 - 新增下載功能
-- 新增全選功能
+- 新增全選功能..
 - 新增相關功能的錯誤處理
 
 ### 其他
