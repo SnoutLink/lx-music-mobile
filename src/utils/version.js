@@ -12,12 +12,10 @@ const abis = [
   'universal',
 ]
 
-const address = [
-  [`https://raw.githubusercontent.com/${author.name}/${name}/master/publish/version.json`, 'direct'],
-  ['https://registry.npmjs.org/lx-music-mobile-version-info/latest', 'npm'],
-  [`https://cdn.jsdelivr.net/gh/${author.name}/${name}/publish/version.json`, 'direct'],
-  [`https://fastly.jsdelivr.net/gh/${author.name}/${name}/publish/version.json`, 'direct'],
-  [`https://gcore.jsdelivr.net/gh/${author.name}/${name}/publish/version.json`, 'direct'],
+import config from '@/config/update'
+const { UPDATE_URLS, RETRY_TIMES, RETRY_DELAY, TIMEOUT } = config
+
+const address = UPDATE_URLS.VERSION_INFO.map(url => [url, 'direct']),
   ['https://registry.npmmirror.com/lx-music-mobile-version-info/latest', 'npm'],
   ['https://gitee.com/lyswhut/lx-music-mobile-versions/raw/master/version.json', 'direct'],
   ['http://cdn.stsky.cn/lx-music/mobile/version.json', 'direct'],
@@ -84,9 +82,48 @@ let downloadJobId = null
 const noop = (total, download) => {}
 let apkSavePath
 
+const downloadWithRetry = async(url, savePath, onDownload, retryCount = 0) => {
+  try {
+    const { jobId, promise } = downloadFile(url, savePath, {
+      progressInterval: 500,
+      connectionTimeout: TIMEOUT,
+      readTimeout: TIMEOUT,
+      begin({ statusCode, contentLength }) {
+        onDownload(contentLength, 0)
+      },
+      progress({ contentLength, bytesWritten }) {
+        onDownload(contentLength, bytesWritten)
+      },
+    })
+    downloadJobId = jobId
+    await promise
+    return true
+  } catch (err) {
+    if (retryCount >= RETRY_TIMES) throw err
+    await new Promise(resolve => setTimeout(resolve, RETRY_DELAY))
+    return downloadWithRetry(url, savePath, onDownload, retryCount + 1)
+  }
+}
+
 export const downloadNewVersion = async(version, onDownload = noop) => {
   const abi = await getTargetAbi()
-  const url = `https://github.com/${author.name}/${name}/releases/download/v${version}/${name}-v${version}-${abi}.apk`
+  const filename = `${name}-v${version}-${abi}.apk`
+  let savePath = temporaryDirectoryPath + '/lx-music-mobile.apk'
+
+  if (downloadJobId) stopDownload(downloadJobId)
+  
+  for (const urlTemplate of UPDATE_URLS.DOWNLOAD_APK) {
+    try {
+      const url = urlTemplate.replace('{version}', version).replace('{filename}', filename)
+      await downloadWithRetry(url, savePath, onDownload)
+      apkSavePath = savePath
+      return updateApp()
+    } catch (err) {
+      console.log('Download failed:', err)
+      continue
+    }
+  }
+  throw new Error('All download attempts failed')
   let savePath = temporaryDirectoryPath + '/lx-music-mobile.apk'
 
   if (downloadJobId) stopDownload(downloadJobId)

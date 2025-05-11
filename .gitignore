@@ -2,6 +2,18 @@
 #
 .DS_Store
 
+# Keystore files
+*.keystore
+*.jks
+keystore.properties
+release.keystore.asc
+
+# Environment
+.env
+.env.local
+.env.*
+!.env.example
+
 # Xcode
 #
 build/
