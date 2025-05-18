@@ -2,9 +2,24 @@ apply plugin: "com.android.application"
 apply plugin: "org.jetbrains.kotlin.android"
 apply plugin: "com.facebook.react"
 
-import com.android.build.OutputFile
-import groovy.json.JsonSlurper
-import org.apache.tools.ant.taskdefs.condition.Os
+// Get version number
+def npmVersion = new File("../package.json").withReader { reader ->
+    def jsonText = reader.text
+    def matcher = jsonText =~ /"version":\s*"([^"]+)"/
+    def versionName = matcher.find() ? matcher[0][1] : "1.0.0"
+    
+    matcher = jsonText =~ /"versionCode":\s*(\d+)/
+    def versionCode = matcher.find() ? matcher[0][1].toInteger() : 1
+    
+    matcher = jsonText =~ /"name":\s*"([^"]+)"/
+    def appName = matcher.find() ? matcher[0][1] : "app"
+    
+    [versionCode: versionCode, versionName: versionName, name: appName]
+}
+
+def verCode = npmVersion.versionCode
+def verName = npmVersion.versionName
+def applicationName = npmVersion.name
 
 /**
  * This is the configuration block to customize your React Native Android app.
@@ -91,17 +106,6 @@ def reactNativeArchitectures() {
     return value ? value.split(",") : ["armeabi-v7a", "x86", "x86_64", "arm64-v8a"]
 }
 
-// Get version number
-def getNpmPackageJson() {
-    def inputFile = new File("../package.json")
-    def packageJson = new JsonSlurper().parseText(inputFile.text)
-    return packageJson
-}
-def npmPackageJson = getNpmPackageJson()
-def verCode = npmPackageJson["versionCode"]
-def verName = npmPackageJson["version"]
-def applicationName = npmPackageJson["name"]
-
 android {
     ndkVersion rootProject.ext.ndkVersion
 
@@ -156,22 +160,17 @@ android {
 
     // applicationVariants are e.g. debug, release
     applicationVariants.all { variant ->
-        variant.outputs.each { output ->
+        variant.outputs.all { output ->
             // For each separate APK per architecture, set a unique version code as described here:
             // https://developer.android.com/studio/build/configure-apk-splits.html
-            // Example: versionCode 1 will generate 1001 for armeabi-v7a, 1002 for x86, etc.
             def versionCodes = ["armeabi-v7a": 1, "x86": 2, "arm64-v8a": 3, "x86_64": 4]
-            def abi = output.getFilter(OutputFile.ABI)
+            def abi = output.getFilter("ABI")
             if (abi == null) {  // null for the universal-debug, universal-release variants
-                output.outputFileName =
-                        "${applicationName}-v${defaultConfig.versionName}-universal.apk"
+                output.outputFileName = "${applicationName}-v${defaultConfig.versionName}-universal.apk"
             } else {
-                output.versionCodeOverride =
-                        defaultConfig.versionCode * 1000 + versionCodes.get(abi)
-                output.outputFileName =
-                        "${applicationName}-v${defaultConfig.versionName}-${abi}.apk"
+                output.outputFileName = "${applicationName}-v${defaultConfig.versionName}-${abi}.apk"
+                output.versionCodeOverride = defaultConfig.versionCode * 1000 + versionCodes.get(abi)
             }
-
         }
     }
 }
