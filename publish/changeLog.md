@@ -4,4 +4,4 @@
 - 新增相關功能的錯誤處理
 
 ### 其他
-- 更新包名為 xyz.20204.lxmusic.mobile
+- 更新包名為 org.dpdns.suyuhang.lxmusic.mobile

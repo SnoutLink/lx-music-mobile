@@ -14,7 +14,7 @@ Change log format is based on [Keep a Changelog](http://keepachangelog.com/).
 - 新增相關功能的錯誤處理
 
 ### 其他
-- 更新包名為 xyz.20204.lxmusic.mobile
+- 更新包名為 org.dpdns.suyuhang.lxmusic.mobile
 
 ## [1.7.1](https://github.com/lyswhut/lx-music-mobile/compare/v1.7.0...v1.7.1) - 2025-05-01
 

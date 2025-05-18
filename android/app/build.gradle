@@ -108,9 +108,9 @@ android {
     buildToolsVersion rootProject.ext.buildToolsVersion
     compileSdk rootProject.ext.compileSdkVersion
 
-    namespace "xyz.20204.lxmusic.mobile"
+    namespace "org.dpdns.suyuhang.lxmusic.mobile"
     defaultConfig {
-        applicationId "xyz.20204.lxmusic.mobile"
+        applicationId "org.dpdns.suyuhang.lxmusic.mobile"
         minSdkVersion rootProject.ext.minSdkVersion
         targetSdkVersion rootProject.ext.targetSdkVersion
         versionCode verCode
